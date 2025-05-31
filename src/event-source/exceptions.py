@@ -4,3 +4,11 @@ class EventSourcingError(Exception):
 
 class NotAnAggregateError(EventSourcingError):
     pass
+
+
+class ReconstructionError(EventSourcingError):
+    pass
+
+
+class AggregateNotFoundError(EventSourcingError):
+    pass

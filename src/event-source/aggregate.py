@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 from uuid import UUID
 from uuid import uuid4
@@ -11,7 +13,8 @@ class AggregateMeta(type):
     _class_registry = {}
 
     def __new__(mcs, name, bases, namespace):
-        """Add a double entry dictionnary with class name -> event_name to get the method back"""
+        """Add a double entry dictionnary with class name -> event_name to get the method back,
+        and a class registery to get the class"""
         cls = super().__new__(mcs, name, bases, namespace)
         if name != "Aggregate":
             # Collect event methods
@@ -26,7 +29,7 @@ class AggregateMeta(type):
 
         return cls
 
-    def __call__(cls, *args, **kwargs) -> "Aggregate":
+    def __call__(cls, *args, **kwargs) -> Aggregate:
         instance: Aggregate = cls.__new__(cls, *args, **kwargs)
         instance._unsaved_event_list = []
         instance._version = 0
@@ -39,6 +42,14 @@ class Aggregate(metaclass=AggregateMeta):
     _unsaved_event_list: list
     _version: int
     _id: UUID
+
+    def collect(self) -> list[Event]:
+        output = self._unsaved_event_list
+        self._unsaved_event_list = []
+        return output
+
+    def __repr__(self):
+        return f"{self._id},{self._version}"
 
 
 def event(event_name):
@@ -55,9 +66,8 @@ def event(event_name):
             self._version += 1
             new_event = Event(
                 name=event_name,
-                type_=".".join(
-                    method.__qualname__.split(".")[:-1]
-                ),  # get the class of the method
+                # get the class of the method
+                type_=".".join(method.__qualname__.split(".")[:-1]),
                 originator_id=self._id,
                 event_kwargs=arg_dict,
                 version=self._version,
@@ -81,9 +91,11 @@ class Event(BaseModel):
     originator_id: UUID
 
     def mutate(self, aggregate: Aggregate | None):
+        print(aggregate)
         func = AggregateMeta._event_function_registry[self.type_][self.name]
         if aggregate:
-            return func(aggregate, **self.event_kwargs)
+            func(aggregate, **self.event_kwargs)
+            return aggregate
         aggregate_class: type[Aggregate] = AggregateMeta._class_registry[self.type_]
         # temporaly replace the init to not trigger an event
         original_init = aggregate_class.__init__
