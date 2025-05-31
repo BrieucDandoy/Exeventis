@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Optional
 from uuid import UUID
 
-from aggregate import Aggregate
+from exeventis.aggregate import Aggregate
 
 
 class EventRecorder(ABC):

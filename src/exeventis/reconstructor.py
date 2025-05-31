@@ -1,5 +1,5 @@
-from aggregate import Event
-from exceptions import ReconstructionError
+from exeventis.aggregate import Event
+from exeventis.exceptions import ReconstructionError
 
 
 class Reconstructor:
@@ -17,6 +17,6 @@ class Reconstructor:
         for event in list_event:
             try:
                 aggregate = event.mutate(aggregate)
-            except:
+            except:  # noqa
                 raise ReconstructionError
         return aggregate

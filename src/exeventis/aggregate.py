@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 import inspect
+from datetime import datetime
 from uuid import UUID
 from uuid import uuid4
 
-from exceptions import NotAnAggregateError
 from pydantic import BaseModel
+
+from exeventis.exceptions import NotAnAggregateError
 
 
 class AggregateMeta(type):
     _event_function_registry = {}
     _class_registry = {}
 
-    def __new__(mcs, name, bases, namespace):
+    def __new__(mcs, name: str, bases: tuple, namespace: dict):
         """Add a double entry dictionnary with class name -> event_name to get the method back,
         and a class registery to get the class"""
         cls = super().__new__(mcs, name, bases, namespace)
@@ -87,6 +89,7 @@ class Event(BaseModel):
     name: str
     type_: str
     event_kwargs: dict
+    timestamp: datetime
     version: int
     originator_id: UUID
 
@@ -97,7 +100,7 @@ class Event(BaseModel):
             func(aggregate, **self.event_kwargs)
             return aggregate
         aggregate_class: type[Aggregate] = AggregateMeta._class_registry[self.type_]
-        # temporaly replace the init to not trigger an event
+        # temporaly replace the init with the init without decorator to not trigger an event
         original_init = aggregate_class.__init__
         aggregate_class.__init__ = func
         instance = AggregateMeta.__call__(aggregate_class, **self.event_kwargs)

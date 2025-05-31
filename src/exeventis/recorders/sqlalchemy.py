@@ -4,16 +4,18 @@ import json
 from typing import Optional
 from uuid import UUID
 
-from aggregate import Event
-from base import EventRecorder
 from sqlalchemy import Column
+from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from transcoders import TranscoderStore
+
+from exeventis.aggregate import Event
+from exeventis.recorders.base import EventRecorder
+from exeventis.transcoders import TranscoderStore
 
 Base = declarative_base()
 
@@ -55,6 +57,8 @@ class EventORM(Base):
     name = Column(String, nullable=False)
     type_ = Column(String, nullable=False)
     event_kwargs = Column(String, nullable=True)
+    version = Column(Integer, nullable=False)
+    timestamp = Column(DateTime)
     originator_id = Column(PG_UUID(as_uuid=True), nullable=False, index=True)
 
     def __repr__(self):

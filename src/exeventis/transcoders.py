@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any
 from typing import Dict
 from typing import Iterator
+from typing import Optional
 from typing import Union
 from uuid import UUID
 
@@ -66,9 +67,11 @@ class Transcoder(ABC):
     name: str
     _class: type
 
-    def __init__(self, name: str, _class: type):
-        self.name = name
-        self._class = _class
+    def __init__(self, name: Optional[str], _class: Optional[type]):
+        if name:
+            self.name = name
+        if _class:
+            self._class = _class
 
     def encode(self, data: Any) -> str:
         raise NotImplementedError
@@ -106,17 +109,17 @@ class PydanticTranscoder(Transcoder):
     _class: BaseModel
 
     def encode(self, data: BaseModel) -> str:
-        self.encode(data.model_dump())
+        self.encode(data.model_dump_json())
 
     def decode(self, encoded_data: str) -> BaseModel:
-        self._class.model_validate(encoded_data)
+        self._class.model_validate_json(encoded_data)
 
 
-def create_transcoder_from_pydantic(
+def BaseModel_transcoder_factory(
     name: str, model_class: type[BaseModel]
 ) -> type[PydanticTranscoder]:
     return type(
-        name,  # Class name
-        (PydanticTranscoder,),  # Base classes
+        name,
+        (PydanticTranscoder,),
         {"name": name, "_class": model_class},
     )

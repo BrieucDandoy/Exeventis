@@ -3,11 +3,11 @@ from collections.abc import MutableMapping
 from typing import Iterator
 from uuid import UUID
 
-from aggregate import Aggregate
-from aggregate import Event
-from base import EventRecorder
-from exceptions import AggregateNotFoundError
-from reconstructor import Reconstructor
+from exeventis.aggregate import Aggregate
+from exeventis.aggregate import Event
+from exeventis.exceptions import AggregateNotFoundError
+from exeventis.reconstructor import Reconstructor
+from exeventis.recorders.base import EventRecorder
 
 
 class EventMemoryRecorder(EventRecorder):

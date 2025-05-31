@@ -1,8 +1,8 @@
 from typing import Optional
 from uuid import UUID
 
-from aggregate import Aggregate
-from recorder import EventRecorder
+from exeventis.aggregate import Aggregate
+from exeventis.recorders.base import EventRecorder
 
 
 class Application:
