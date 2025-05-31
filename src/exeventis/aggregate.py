@@ -65,11 +65,16 @@ def event(event_name):
             bound.apply_defaults()
             arg_dict = dict(bound.arguments)
             arg_dict.pop("self")
+            try:
+                timestamp = arg_dict.pop("timestamp")
+            except KeyError:
+                timestamp = datetime.now()
             self._version += 1
             new_event = Event(
                 name=event_name,
                 # get the class of the method
                 type_=".".join(method.__qualname__.split(".")[:-1]),
+                timestamp=timestamp,
                 originator_id=self._id,
                 event_kwargs=arg_dict,
                 version=self._version,
@@ -94,10 +99,10 @@ class Event(BaseModel):
     originator_id: UUID
 
     def mutate(self, aggregate: Aggregate | None):
-        print(aggregate)
         func = AggregateMeta._event_function_registry[self.type_][self.name]
         if aggregate:
             func(aggregate, **self.event_kwargs)
+            aggregate._version = self.version
             return aggregate
         aggregate_class: type[Aggregate] = AggregateMeta._class_registry[self.type_]
         # temporaly replace the init with the init without decorator to not trigger an event
@@ -105,4 +110,5 @@ class Event(BaseModel):
         aggregate_class.__init__ = func
         instance = AggregateMeta.__call__(aggregate_class, **self.event_kwargs)
         aggregate_class.__init__ = original_init
+        instance._version = self.version
         return instance
