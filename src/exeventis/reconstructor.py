@@ -50,9 +50,9 @@ class StandartReconstructor(Reconstructor):
             If an error occurs during event application.
         """
         if priority:
-            list_event.sort(key=priority)
+            list_event.sort(key=priority.get_key(Event))
         else:
-            list_event.sort(key=self.priority)
+            list_event.sort(key=self.priority.get_key(Event))
 
         for event in list_event:
             try:

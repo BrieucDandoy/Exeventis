@@ -37,9 +37,9 @@ class Recorder(ABC):
         self.name = name
 
     @abstractmethod
-    def save(self, aggregate: Aggregate):
+    def save(self, event_list: list[Event]):
         """
-        Abstract method to save an aggregate or event(s).
+        Abstract method to save events.
 
         Parameters
         ----------
@@ -96,7 +96,7 @@ class Reconstructor(ABC):
 
     priority: Priority
 
-    def __init__(self, prioritiy: Priority = Priority.timestamp):
+    def __init__(self, priority: Priority = Priority.version):
         """
         Initialize the reconstructor with a default event sorting strategy.
 
@@ -106,7 +106,7 @@ class Reconstructor(ABC):
             The default priority used to sort events before applying them
             (default is Priority.timestamp).
         """
-        self.prioritiy = prioritiy
+        self.priority = priority
 
     @abstractmethod
     def reconstruct(

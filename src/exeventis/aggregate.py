@@ -266,6 +266,7 @@ class Event(BaseModel):
         if aggregate:
             func(aggregate, **self.event_kwargs)
             aggregate._version = self.version
+            aggregate._last_update_date = self.timestamp
             return aggregate
         aggregate_class: type[Aggregate] = AggregateMeta._class_registry[self.type_]
         # Temporarily replace __init__ to avoid triggering events
@@ -273,8 +274,9 @@ class Event(BaseModel):
         aggregate_class.__init__ = func
         instance = AggregateMeta.__call__(aggregate_class, **self.event_kwargs)
         instance._id = self.originator_id
-        aggregate_class.__init__ = original_init
         instance._version = self.version
+        instance._last_update_date = self.timestamp
+        aggregate_class.__init__ = original_init
         return instance
 
 

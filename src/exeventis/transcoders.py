@@ -158,6 +158,7 @@ class TranscoderStore(MutableMapping):
         Any
             The decoded object if recognized, otherwise the original dict.
         """
+        print(f"object_hook for {obj}")
         if "_key_" in obj and "_value_" in obj:
             transcoder = self._transcoders[obj["_key_"]]
             return transcoder.decode(obj["_value_"])
@@ -358,3 +359,10 @@ def BaseModel_transcoder_factory(
         (PydanticTranscoder,),
         {"name": name, "_class": model_class},
     )
+
+
+class StandartTranscoderStore(TranscoderStore):
+    def __init__(self):
+        super().__init__()
+        self.add(DatetimeTranscoder())
+        self.add(UUIDTranscoder())

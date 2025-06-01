@@ -1,13 +1,13 @@
 from typing import Optional
 from uuid import UUID
 
+from exeventis.abc import Recorder
 from exeventis.aggregate import Aggregate
 from exeventis.exceptions import AggregateNotFoundError
-from exeventis.recorders.base import EventRecorder
 
 
 class Application:
-    def __init__(self, recorders: list[EventRecorder]):
+    def __init__(self, recorders: list[Recorder]):
         self.recorders = recorders
 
     def save(self, aggregate: Aggregate):
@@ -20,9 +20,9 @@ class Application:
     def get(
         self,
         originator_id: UUID,
-        recorder: Optional[EventRecorder] = None,
+        recorder: Optional[Recorder] = None,
         recorder_name: Optional[str] = None,
-        recorder_class: Optional[type[EventRecorder]] = None,
+        recorder_class: Optional[type[Recorder]] = None,
         *args,
         **kwargs,
     ):

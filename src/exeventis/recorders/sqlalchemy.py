@@ -11,14 +11,14 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from exeventis.abc import Reconstructor
 from exeventis.abc import Recorder
 from exeventis.aggregate import Aggregate
 from exeventis.aggregate import Event
-from exeventis.aggregate import Priority
+from exeventis.reconstructor import StandartReconstructor
 from exeventis.transcoders import TranscoderStore
 
 Base = declarative_base()
@@ -59,7 +59,7 @@ class SqlRecorder(Recorder):
         self,
         database_url: str,
         transcoder_store: TranscoderStore,
-        aggregates_types=...,
+        aggregates_types=[Aggregate],
         name: Optional[str] = None,
         reconstructor: Optional[Reconstructor] = None,
     ):
@@ -69,12 +69,12 @@ class SqlRecorder(Recorder):
         self.session_maker = sessionmaker(bind=self.engine)
         self.transcoder_store = transcoder_store
         if not reconstructor:
-            self.reconstructor = Reconstructor()
+            self.reconstructor = StandartReconstructor()
         else:
             self.reconstructor = reconstructor
 
     def add(self, event: Event):
-        orm_event = EventORM.from_event(event)
+        orm_event = EventORM.from_event(event, transcoder_store=self.transcoder_store)
         with self.session_maker() as session:
             session.add(orm_event)
             session.commit()
@@ -82,9 +82,8 @@ class SqlRecorder(Recorder):
     def get(
         self,
         originator_id: UUID,
-        max_timestamp: Optional[datetime],
-        max_version: Optional[int],
-        priority: Priority,
+        max_timestamp: Optional[datetime] = None,
+        max_version: Optional[int] = None,
     ) -> Aggregate:
         with self.session_maker() as session:
             query = session.query(EventORM).filter(EventORM.originator_id == originator_id)
@@ -96,9 +95,20 @@ class SqlRecorder(Recorder):
                 query = query.filter(EventORM.timestamp <= max_timestamp)
 
             events_orm = query.all()
+            print(events_orm)
             events = [event.to_event(self.transcoder_store) for event in events_orm]
-            events.sort(key=priority.get_key(Event))
-            self.reconstructor.reconstruct(events)
+            aggregate = self.reconstructor.reconstruct(events)
+        return aggregate
+
+    def save(self, event_list: list[Event]):
+        with self.session_maker() as session:
+            session.add_all(
+                [
+                    EventORM.from_event(event, transcoder_store=self.transcoder_store)
+                    for event in event_list
+                ]
+            )
+            session.commit()
 
 
 class EventORM(Base):
@@ -142,7 +152,7 @@ class EventORM(Base):
 
     __tablename__ = "events"
 
-    id = Column(Integer(as_uuid=True), primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     type_ = Column(String, nullable=False)
     event_kwargs = Column(String, nullable=True)
@@ -163,14 +173,18 @@ class EventORM(Base):
         return cls(
             name=event.name,
             type_=event.type_,
-            event_kwargs=json.load(event.event_kwargs, object_hook=transcoder_store.object_hook),
+            event_kwargs=json.dumps(event.event_kwargs, default=transcoder_store.default),
             originator_id=event.originator_id,
+            version=event.version,
+            timestamp=event.timestamp,
         )
 
     def to_event(self, transcoder_store: TranscoderStore) -> Event:
         return Event(
             name=self.name,
             type_=self.type_,
-            event_kwargs=json.dumps(self.event_kwargs, default=transcoder_store.default),
+            event_kwargs=json.loads(self.event_kwargs, object_hook=transcoder_store.object_hook),
             originator_id=self.originator_id,
+            version=self.version,
+            timestamp=self.timestamp,
         )

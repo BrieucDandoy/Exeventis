@@ -2,9 +2,11 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 from datetime import datetime
 from typing import Any
+from typing import Generic
 from typing import Hashable
 from typing import Iterator
 from typing import Optional
+from typing import TypeVar
 from typing import Union
 from uuid import UUID
 
@@ -132,7 +134,11 @@ class EventMemory(MutableMapping):
         return self.data.__repr__()
 
 
-class LimitedOrderedDict:
+K = TypeVar("K")
+V = TypeVar("V")
+
+
+class LimitedOrderedDict(Generic[K, V]):
     """
     A size-limited, insertion-order-preserving dictionary that stores lists of values per key.
 
@@ -237,8 +243,9 @@ class EventAggregateMemory(Recorder):
         self.events: LimitedOrderedDict[UUID, list[Event]] = LimitedOrderedDict()
         self.reconstructor = StandartReconstructor()
 
-    def add_event(self, event: Event):
-        self.events.add(key=event.originator_id, value=event)
+    def save(self, event_list: list[Event]):
+        for event in event_list:
+            self.events.add(key=event.originator_id, value=event)
 
     def add_aggregate(self, aggregate: Aggregate):
         self.snapshots.add(key=aggregate._id, value=aggregate)

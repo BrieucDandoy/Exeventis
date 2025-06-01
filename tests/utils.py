@@ -2,8 +2,6 @@ from datetime import datetime
 
 from exeventis.aggregate import Aggregate
 from exeventis.aggregate import event
-from exeventis.application import Application
-from exeventis.recorders.memory import EventMemoryRecorder
 
 
 class Account(Aggregate):
@@ -20,6 +18,9 @@ class Account(Aggregate):
     def subtract(self, amount: float, timestamp: datetime = datetime.now()):
         self.balance -= amount
 
+    def __repr__(self):
+        return f"{self.name}, {self.balance}"
+
 
 class Dog(Aggregate):
     @event("birth")
@@ -35,9 +36,3 @@ class Dog(Aggregate):
     def remove_trick(self, trick: str):
         if trick in self.tricks:
             self.tricks.remove(trick)
-
-
-account_recorder = EventMemoryRecorder([Account], name="Account recorder")
-dog_recorder = EventMemoryRecorder([Dog], name="dog recorder")
-global_recorder = EventMemoryRecorder(name="global recorder")
-service = Application(recorders=[account_recorder, dog_recorder, global_recorder])
