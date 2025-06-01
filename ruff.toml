@@ -1,1 +1,2 @@
 isort.force-single-line = true
+line-length = 100

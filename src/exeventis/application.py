@@ -35,9 +35,7 @@ class Application:
             ):
                 return recorder.get(originator_id, *args, **kwargs)
             try:
-                aggregate: Optional[Aggregate] = recorder.get(
-                    originator_id, *args, **kwargs
-                )
+                aggregate: Optional[Aggregate] = recorder.get(originator_id, *args, **kwargs)
             except AggregateNotFoundError:
                 aggregate = None
             if aggregate:
