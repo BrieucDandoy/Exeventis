@@ -53,6 +53,11 @@ class Aggregate(metaclass=AggregateMeta):
     def __repr__(self):
         return f"{self._id},{self._version}"
 
+    def __eq__(self, other: Aggregate):
+        if isinstance(other, self.__class__) and self.__dict__ == other.__dict__:
+            return True
+        return False
+
 
 def event(event_name):
     def event_decorator(method):
@@ -109,6 +114,7 @@ class Event(BaseModel):
         original_init = aggregate_class.__init__
         aggregate_class.__init__ = func
         instance = AggregateMeta.__call__(aggregate_class, **self.event_kwargs)
+        instance._id = self.originator_id
         aggregate_class.__init__ = original_init
         instance._version = self.version
         return instance

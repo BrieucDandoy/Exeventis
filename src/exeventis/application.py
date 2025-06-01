@@ -2,6 +2,7 @@ from typing import Optional
 from uuid import UUID
 
 from exeventis.aggregate import Aggregate
+from exeventis.exceptions import AggregateNotFoundError
 from exeventis.recorders.base import EventRecorder
 
 
@@ -33,9 +34,11 @@ class Application:
                 recorder_class and isinstance(recorder, recorder_class)
             ):
                 return recorder.get(originator_id, *args, **kwargs)
-
-            aggregate: Optional[Aggregate] = recorder.get(
-                originator_id, *args, **kwargs
-            )
+            try:
+                aggregate: Optional[Aggregate] = recorder.get(
+                    originator_id, *args, **kwargs
+                )
+            except AggregateNotFoundError:
+                aggregate = None
             if aggregate:
                 return aggregate

@@ -1,66 +1,9 @@
 from datetime import datetime
 from uuid import uuid4
 
-from exeventis.aggregate import Aggregate
+from utils import Account
+
 from exeventis.aggregate import Event
-from exeventis.aggregate import event
-from exeventis.application import Application
-from exeventis.recorders.memory import EventMemoryRecorder
-
-
-class Account(Aggregate):
-    @event("creation")
-    def __init__(self, name: str):
-        self.name = name
-        self.balance = 0
-
-    @event("add")
-    def add(self, amount: float, timestamp: datetime = datetime.now()):
-        self.balance += amount
-
-    @event("subtract")
-    def subtract(self, amount: float, timestamp: datetime = datetime.now()):
-        self.balance -= amount
-
-
-class Dog(Aggregate):
-    @event("birth")
-    def __init__(self, name: str):
-        self.name = name
-        self.tricks = []
-
-    @event("add_trick")
-    def add_trick(self, trick: str):
-        self.tricks.append(trick)
-
-    @event("remove_trick")
-    def remove_trick(self, trick: str):
-        if trick in self.tricks:
-            self.tricks.remove(trick)
-
-
-class Service(Application):
-    pass
-
-
-account_recorder = EventMemoryRecorder([Account], name="Account recorder")
-dog_recorder = EventMemoryRecorder([Dog], name="dog recorder")
-global_recorder = EventMemoryRecorder(name="global recorder")
-service = Application(recorders=[account_recorder, dog_recorder, global_recorder])
-
-
-class Account(Aggregate):
-    @event("creation")
-    def __init__(self, balance=0):
-        self.balance = balance
-
-    @event("deposit")
-    def deposit(self, amount: int):
-        self.balance += amount
-
-    @event("withdraw")
-    def withdraw(self, amount: int):
-        self.balance -= amount
 
 
 def test_event_capture():
@@ -141,7 +84,3 @@ def test_state_rehydration_from_history():
     assert isinstance(state, Account)
     assert state.balance == 5
     assert state._version == 3
-
-
-if __name__ == "__main__":
-    test_event_ordering_and_versioning()

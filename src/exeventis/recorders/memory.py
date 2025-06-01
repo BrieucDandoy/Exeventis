@@ -26,6 +26,9 @@ class EventMemoryRecorder(EventRecorder):
             return self.reconstructor.reconstruct(event_list)
         raise AggregateNotFoundError
 
+    def __repr__(self):
+        return self.memory.__repr__()
+
 
 class EventMemory(MutableMapping):
     def __init__(self):
@@ -48,6 +51,9 @@ class EventMemory(MutableMapping):
 
     def __len__(self) -> int:
         return len(self.data)
+
+    def __repr__(self):
+        return self.data.__repr__()
 
 
 class LimitedEventMemory:

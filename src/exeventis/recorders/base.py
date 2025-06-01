@@ -3,10 +3,12 @@ from typing import Optional
 from uuid import UUID
 
 from exeventis.aggregate import Aggregate
+from exeventis.reconstructor import Reconstructor
 
 
 class EventRecorder(ABC):
     name: Optional[str] = None
+    reconstructor: Reconstructor
 
     def __init__(
         self,
