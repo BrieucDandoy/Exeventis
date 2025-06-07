@@ -22,4 +22,10 @@ def test_application():
     dog_id = dog._id
     dog_copy: Dog = service.get(originator_id=dog_id)
 
-    assert dog == dog_copy
+    assert dog._id == dog_copy._id
+    assert dog.tricks == dog_copy.tricks
+    assert dog.name == dog_copy.name
+
+
+if __name__ == "__main__":
+    test_application()

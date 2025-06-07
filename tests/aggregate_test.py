@@ -6,12 +6,14 @@ from utils import Dog
 
 from exeventis.application import Application
 from exeventis.domain import Event
+from exeventis.recorder_store import RecorderStore
 from exeventis.recorders.memory import EventMemoryRecorder
 
 account_recorder = EventMemoryRecorder([Account], name="Account recorder")
 dog_recorder = EventMemoryRecorder([Dog], name="dog recorder")
 global_recorder = EventMemoryRecorder(name="global recorder")
-service = Application(recorders=[account_recorder, dog_recorder, global_recorder])
+recorder_store = RecorderStore(recorders=[account_recorder, dog_recorder, global_recorder])
+service = Application(recorder_store=recorder_store)
 
 
 def test_event_capture():

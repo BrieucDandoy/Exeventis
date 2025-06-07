@@ -19,4 +19,4 @@ class Application:
         *args,
         **kwargs,
     ):
-        self.recorders.get(originator_id, recorder_name, *args, **kwargs)
+        return self.recorders.get(originator_id, recorder_name, *args, **kwargs)

@@ -56,6 +56,7 @@ class SqlRecorder(Recorder):
         Retrieves and reconstructs an aggregate from stored events.
     """
 
+    rank: int = 20
     current_session: Optional[Session]
 
     def __init__(
@@ -63,10 +64,12 @@ class SqlRecorder(Recorder):
         database_url: str,
         transcoder_store: TranscoderStore,
         aggregates_types=[Aggregate],
-        name: Optional[str] = None,
+        name: str = None,
         reconstructor: Optional[Reconstructor] = None,
     ):
         super().__init__(aggregates_types, name)
+        if name is None:
+            self.name = self.__qualname__
         self.engine = create_engine(database_url)
         Base.metadata.create_all(self.engine)
         self.session_maker = sessionmaker(bind=self.engine)
@@ -75,12 +78,6 @@ class SqlRecorder(Recorder):
             self.reconstructor = StandartReconstructor()
         else:
             self.reconstructor = reconstructor
-
-    def add(self, event: Event):
-        orm_event = EventORM.from_event(event, transcoder_store=self.transcoder_store)
-        with self.session_maker() as session:
-            session.add(orm_event)
-            session.commit()
 
     def get(
         self,
@@ -98,7 +95,6 @@ class SqlRecorder(Recorder):
                 query = query.filter(EventORM.timestamp <= max_timestamp)
 
             events_orm = query.all()
-            print(events_orm)
             events = [event.to_event(self.transcoder_store) for event in events_orm]
             aggregate = self.reconstructor.reconstruct(events)
         return aggregate
@@ -112,7 +108,6 @@ class SqlRecorder(Recorder):
                 for event in event_list
             ]
         )
-        self.commit()
 
     def commit(self):
         if not self.current_session:

@@ -36,3 +36,6 @@ class Dog(Aggregate):
     def remove_trick(self, trick: str):
         if trick in self.tricks:
             self.tricks.remove(trick)
+
+    def __repr__(self):
+        return f"name={self.name}, tricks={self.tricks}"

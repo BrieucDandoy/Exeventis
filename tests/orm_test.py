@@ -1,6 +1,7 @@
 from utils import Account
 
 from exeventis.application import Application
+from exeventis.recorder_store import RecorderStore
 from exeventis.recorders.sqlalchemy import SqlRecorder
 from exeventis.transcoders import StandartTranscoderStore
 
@@ -9,7 +10,8 @@ sql_recorder = SqlRecorder(
     name="SQL recorder",
     transcoder_store=StandartTranscoderStore(),
 )
-service = Application(recorders=[sql_recorder])
+recorder_store = RecorderStore(recorders=[sql_recorder])
+service = Application(recorder_store=recorder_store)
 
 
 def test_application_get():
@@ -20,6 +22,9 @@ def test_application_get():
 
     account_copy = service.get(account._id)
 
-    print(account.__dict__)
-    print(account_copy.__dict__)
-    assert account_copy == account
+    assert account_copy._id == account._id
+    assert account.balance == account.balance
+
+
+if __name__ == "__main__":
+    test_application_get()

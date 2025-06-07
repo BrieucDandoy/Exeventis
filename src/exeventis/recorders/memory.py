@@ -34,13 +34,15 @@ class EventMemoryRecorder(Recorder):
         Optional name identifier for this recorder.
     """
 
+    rank: int = 10
+
     def __init__(self, aggregates_types=[Aggregate], name=None):
         super().__init__(aggregates_types, name)
         self.memory = EventMemory()
         self.reconstructor = StandartReconstructor()
         self.previous_addition: Optional[List[Event]] = None
 
-    def save(self, event_list: List[Event]):
+    def save(self, aggregate: Aggregate):
         """
         Stores a list of events in memory.
 
@@ -49,6 +51,7 @@ class EventMemoryRecorder(Recorder):
         event_list : list[Event]
             List of events to store.
         """
+        event_list = aggregate._unsaved_event_list
         for event in event_list:
             self.memory.add(event)
         self.previous_addition = event_list
