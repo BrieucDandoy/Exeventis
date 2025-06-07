@@ -1,42 +1,22 @@
 from typing import Optional
 from uuid import UUID
 
-from exeventis.abc import Recorder
-from exeventis.aggregate import Aggregate
-from exeventis.exceptions import AggregateNotFoundError
+from exeventis.domain import Aggregate
+from exeventis.recorder_store import RecorderStore
 
 
 class Application:
-    def __init__(self, recorders: list[Recorder]):
-        self.recorders = recorders
+    def __init__(self, recorder_store: RecorderStore):
+        self.recorders = recorder_store
 
     def save(self, aggregate: Aggregate):
-        event_list = aggregate.collect()
-        for recorder in self.recorders:
-            for aggregate_type in recorder.aggregates_types:
-                if isinstance(aggregate, aggregate_type):
-                    recorder.save(event_list)
+        self.recorders.save(aggregate)
 
     def get(
         self,
         originator_id: UUID,
-        recorder: Optional[Recorder] = None,
         recorder_name: Optional[str] = None,
-        recorder_class: Optional[type[Recorder]] = None,
         *args,
         **kwargs,
     ):
-        if recorder:
-            return recorder.get(originator_id, *args, **kwargs)
-
-        for recorder in self.recorders:
-            if (recorder_name and recorder.name == recorder_name) or (
-                recorder_class and isinstance(recorder, recorder_class)
-            ):
-                return recorder.get(originator_id, *args, **kwargs)
-            try:
-                aggregate: Optional[Aggregate] = recorder.get(originator_id, *args, **kwargs)
-            except AggregateNotFoundError:
-                aggregate = None
-            if aggregate:
-                return aggregate
+        self.recorders.get(originator_id, recorder_name, *args, **kwargs)

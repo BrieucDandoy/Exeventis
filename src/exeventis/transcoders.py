@@ -330,7 +330,7 @@ class PydanticTranscoder(Transcoder):
         self._class.model_validate(encoded_data)
 
 
-def BaseModel_transcoder_factory(
+def pydantic_transcoder_factory(
     name: str, model_class: type[BaseModel]
 ) -> type[PydanticTranscoder]:
     """
@@ -351,7 +351,7 @@ def BaseModel_transcoder_factory(
     Examples
     --------
     >>> User = pydantic.BaseModel.construct(...)  # Your Pydantic model
-    >>> UserTranscoder = BaseModel_transcoder_factory("UserTranscoder", User)
+    >>> UserTranscoder = pydantic_transcoder_factory("UserTranscoder", User)
     >>> transcoder = UserTranscoder()
     """
     return type(

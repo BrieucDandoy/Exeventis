@@ -11,13 +11,14 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Session
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from exeventis.abc import Reconstructor
 from exeventis.abc import Recorder
-from exeventis.aggregate import Aggregate
-from exeventis.aggregate import Event
+from exeventis.domain import Aggregate
+from exeventis.domain import Event
 from exeventis.reconstructor import StandartReconstructor
 from exeventis.transcoders import TranscoderStore
 
@@ -54,6 +55,8 @@ class SqlRecorder(Recorder):
     get(originator_id: UUID, max_timestamp: datetime, max_version: int, priority: Priority) -> Aggregate
         Retrieves and reconstructs an aggregate from stored events.
     """
+
+    current_session: Optional[Session]
 
     def __init__(
         self,
@@ -100,15 +103,30 @@ class SqlRecorder(Recorder):
             aggregate = self.reconstructor.reconstruct(events)
         return aggregate
 
-    def save(self, event_list: list[Event]):
-        with self.session_maker() as session:
-            session.add_all(
-                [
-                    EventORM.from_event(event, transcoder_store=self.transcoder_store)
-                    for event in event_list
-                ]
-            )
-            session.commit()
+    def save(self, aggregate: Aggregate):
+        event_list = aggregate._unsaved_event_list
+        self.current_session = self.session_maker()
+        self.current_session.add_all(
+            [
+                EventORM.from_event(event, transcoder_store=self.transcoder_store)
+                for event in event_list
+            ]
+        )
+        self.commit()
+
+    def commit(self):
+        if not self.current_session:
+            raise RuntimeError("No session to commit")
+        self.current_session.commit()
+        self.current_session.close()
+        self.current_session = None
+
+    def rollback(self):
+        if not self.current_session:
+            raise RuntimeError("No session to rollback")
+        self.current_session.rollback()
+        self.current_session.close()
+        self.current_session = None
 
 
 class EventORM(Base):

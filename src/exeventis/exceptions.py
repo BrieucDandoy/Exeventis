@@ -12,3 +12,11 @@ class ReconstructionError(EventSourcingError):
 
 class AggregateNotFoundError(EventSourcingError):
     pass
+
+
+class EventNotFoundError(EventSourcingError):
+    pass
+
+
+class RecorderSavingError(EventSourcingError):
+    pass

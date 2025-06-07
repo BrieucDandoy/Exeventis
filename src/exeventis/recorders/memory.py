@@ -5,15 +5,16 @@ from typing import Any
 from typing import Generic
 from typing import Hashable
 from typing import Iterator
+from typing import List
 from typing import Optional
 from typing import TypeVar
 from typing import Union
 from uuid import UUID
 
 from exeventis.abc import Recorder
-from exeventis.aggregate import Aggregate
-from exeventis.aggregate import Event
-from exeventis.aggregate import Priority
+from exeventis.domain import Aggregate
+from exeventis.domain import Event
+from exeventis.domain import Priority
 from exeventis.exceptions import AggregateNotFoundError
 from exeventis.reconstructor import StandartReconstructor
 
@@ -37,8 +38,9 @@ class EventMemoryRecorder(Recorder):
         super().__init__(aggregates_types, name)
         self.memory = EventMemory()
         self.reconstructor = StandartReconstructor()
+        self.previous_addition: Optional[List[Event]] = None
 
-    def save(self, event_list: list[Event]):
+    def save(self, event_list: List[Event]):
         """
         Stores a list of events in memory.
 
@@ -49,6 +51,17 @@ class EventMemoryRecorder(Recorder):
         """
         for event in event_list:
             self.memory.add(event)
+        self.previous_addition = event_list
+
+    def rollback(self):
+        if self.previous_addition is None:
+            raise RuntimeError("Nothing to rollback")
+        for previous_event in self.previous_addition:
+            lst: List[Event] = self.memory.get(previous_event.originator_id)
+            lst.remove(previous_event)
+
+    def commit(self):
+        self.previous_addition = None
 
     def get(self, originator_id: UUID):
         """

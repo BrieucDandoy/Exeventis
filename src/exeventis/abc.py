@@ -3,12 +3,14 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from typing import Any
+from typing import List
 from typing import Optional
+from typing import Union
 from uuid import UUID
 
-from exeventis.aggregate import Aggregate
-from exeventis.aggregate import Event
-from exeventis.aggregate import Priority
+from exeventis.domain import Aggregate
+from exeventis.domain import Event
+from exeventis.domain import Priority
 
 
 class Recorder(ABC):
@@ -27,6 +29,7 @@ class Recorder(ABC):
 
     name: Optional[str] = None
     reconstructor: Reconstructor
+    rank: Union[float, int]
 
     def __init__(
         self,
@@ -37,7 +40,7 @@ class Recorder(ABC):
         self.name = name
 
     @abstractmethod
-    def save(self, event_list: list[Event]):
+    def save(self, aggregate: Aggregate):
         """
         Abstract method to save events.
 
@@ -54,7 +57,15 @@ class Recorder(ABC):
         pass
 
     @abstractmethod
-    def get(self, originator_id: UUID, **kwargs) -> Aggregate | None:
+    def commit(self):
+        pass
+
+    @abstractmethod
+    def rollback(self):
+        pass
+
+    @abstractmethod
+    def get(self, originator_id: UUID, **kwargs) -> Optional[List[Event]]:
         """
         Abstract method to retrieve an aggregate by originator ID.
 
@@ -74,6 +85,12 @@ class Recorder(ABC):
             If the method is not implemented in a subclass.
         """
         pass
+
+    def is_recordable(self, aggregate: Aggregate) -> bool:
+        for cls in self.aggregates_types:
+            if isinstance(aggregate, cls):
+                return True
+        return False
 
 
 class Reconstructor(ABC):
