@@ -4,8 +4,8 @@ from uuid import uuid4
 from utils import Account
 from utils import Dog
 
-from exeventis.aggregate import Event
 from exeventis.application import Application
+from exeventis.domain import Event
 from exeventis.recorders.memory import EventMemoryRecorder
 
 account_recorder = EventMemoryRecorder([Account], name="Account recorder")

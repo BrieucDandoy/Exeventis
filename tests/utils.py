@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from exeventis.aggregate import Aggregate
-from exeventis.aggregate import event
+from exeventis.domain import Aggregate
+from exeventis.domain import event
 
 
 class Account(Aggregate):

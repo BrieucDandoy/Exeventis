@@ -1,9 +1,9 @@
 from typing import Optional
 
 from exeventis.abc import Reconstructor
-from exeventis.aggregate import Aggregate
-from exeventis.aggregate import Event
-from exeventis.aggregate import Priority
+from exeventis.domain import Aggregate
+from exeventis.domain import Event
+from exeventis.domain import Priority
 from exeventis.exceptions import ReconstructionError
 
 
